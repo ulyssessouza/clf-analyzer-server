@@ -18,7 +18,5 @@ func main() {
 	e.GET("/test", http.TestHandler)
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
-
-
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", port)))
 }
