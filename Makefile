@@ -1,3 +1,8 @@
+# Configuration
+#FIXME Consider using environment variables
+APP_PORT=8000
+GIN_PORT=3000
+
 # Go parameters
 GOCMD=go
 
@@ -33,7 +38,7 @@ run: build
 	$(BINARY_TARGET_PATH)
 
 rundev:
-	gin -a 8000 -p 3000 --bin $(BUILD_TARGET_PATH)/$(BINARY_NAME) --buildArgs $(GIN_BUILD_ARGS) run main
+	gin -a $(APP_PORT) -p $(GIN_PORT) --bin $(BINARY_TARGET_PATH) --buildArgs $(GIN_BUILD_ARGS) run main.go
 
 # Cross compilation
 build-linux: goformat
