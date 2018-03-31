@@ -22,7 +22,7 @@ BINARY_TARGET_PATH=$(BUILD_TARGET_PATH)/$(BINARY_NAME)
 BINARY_TARGET_UNIX_PATH=$(BUILD_TARGET_PATH)/$(BINARY_UNIX)
 BINARY_TARGET_WINDOWS_PATH=$(BUILD_TARGET_PATH)/$(BINARY_WINDOWS)
 
-ensure-progs: ensure-swag
+ensure-progs: ensure-swag ensure-dep
 
 all: test rundev
 
@@ -67,7 +67,11 @@ swagger:
 
 ensure-swag:
 ifeq (, $(shell which swag))
-	echo "Exddaasdasdsdsdasdas"
 	go get -u github.com/swaggo/swag/cmd/swag
+endif
+
+ensure-dep:
+ifeq (, $(shell which dep))
+	go get -u github.com/golang/dep/cmd/dep
 endif
 
