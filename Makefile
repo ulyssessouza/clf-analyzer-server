@@ -1,33 +1,39 @@
 # Go parameters
 GOCMD=go
+
+GOBUILD_ARGS=-o $(BINARY_TARGET_PATH) -v
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 
-BUILD_TARGET_PATH=target
+BUILD_TARGET_PATH=dist
 BINARY_NAME=clf-anayzer-server
 BINARY_UNIX=$(BINARY_NAME)_unix
+BINARY_WINDOWS=$(BINARY_NAME)_win
+
+GIN_BUILD_ARGS="$(GOBUILD_ARGS)"
 
 BINARY_TARGET_PATH=$(BUILD_TARGET_PATH)/$(BINARY_NAME)
 BINARY_TARGET_UNIX_PATH=$(BUILD_TARGET_PATH)/$(BINARY_UNIX)
 BINARY_TARGET_WINDOWS_PATH=$(BUILD_TARGET_PATH)/$(BINARY_WINDOWS)
 
-all: test build run
+all: test rundev
 
-build: goformat
-	$(GOBUILD) -o $(BINARY_TARGET_PATH) -v
+build: clean goformat swagger
+	$(GOBUILD) $(GOBUILD_ARGS)
 
-test:  goformat
+test: build
 	$(GOTEST) -v ./...
 
 clean:
 	$(GOCLEAN)
-	rm -f $(BINARY_TARGET_PATH)
-	rm -f $(BINARY_TARGET_UNIX_PATH)
+	rm -rf $(BUILD_TARGET_PATH)
 
-run:
-	$(GOBUILD) -o $(BINARY_TARGET_PATH) -v
+run: build
 	$(BINARY_TARGET_PATH)
+
+rundev:
+	gin -a 8000 -p 3000 --bin $(BUILD_TARGET_PATH)/$(BINARY_NAME) --buildArgs $(GIN_BUILD_ARGS) run main
 
 # Cross compilation
 build-linux: goformat
@@ -48,3 +54,6 @@ check-env-%:
 
 goformat:
 	go fmt .
+
+swagger:
+	swag init
