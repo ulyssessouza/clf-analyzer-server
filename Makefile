@@ -26,7 +26,10 @@ ensure-progs: ensure-swag ensure-dep
 
 all: test rundev
 
-build: ensure-progs clean goformat swagger
+ensure:
+	dep ensure
+
+build: ensure-progs clean goformat swagger ensure
 	$(GOBUILD) $(GOBUILD_ARGS)
 
 test: build
