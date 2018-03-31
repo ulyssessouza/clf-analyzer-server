@@ -33,7 +33,7 @@ build: ensure-progs clean goformat swagger ensure
 	$(GOBUILD) $(GOBUILD_ARGS)
 
 test: build
-	$(GOTEST) -v ./...
+	$(GOTEST) -v $(go list ./... | grep -v /vendor/)
 
 clean:
 	$(GOCLEAN)
