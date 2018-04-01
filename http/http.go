@@ -1,9 +1,13 @@
 package http
 
 import (
+	"time"
 	"net/http"
 	"github.com/labstack/echo"
+	"github.com/gorilla/websocket"
 )
+
+var upgrader = websocket.Upgrader{}
 
 type HandlerResponse struct {
 	Message     string
@@ -26,5 +30,25 @@ func RootHandler(c echo.Context) error {
 func TestHandler(c echo.Context) error {
 	response := HandlerResponse{"Test endpoint!!!", []*echo.Route{}}
 	return c.JSON(http.StatusOK, response)
+}
+
+func HelloWS(c echo.Context) error {
+	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+	if err != nil {
+		return err
+	}
+	defer ws.Close()
+
+	response := HandlerResponse{"Test websocket endpoint!!!", []*echo.Route{}}
+
+	for {
+		err := ws.WriteJSON(response)
+		if err != nil {
+			//c.Logger().Debug(err)
+			return nil
+		}
+
+		time.Sleep(time.Second)
+	}
 }
 

@@ -14,6 +14,12 @@
   revision = "de5bf2ad457846296e2031421a34e2568e304e35"
 
 [[projects]]
+  name = "github.com/dgrijalva/jwt-go"
+  packages = ["."]
+  revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
+  version = "v3.2.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/go-openapi/jsonpointer"
   packages = ["."]
@@ -38,16 +44,27 @@
   revision = "ceb469cb0fdf2d792f28d771bc05da6c606f55e5"
 
 [[projects]]
-  name = "github.com/labstack/echo"
+  name = "github.com/gorilla/websocket"
   packages = ["."]
+  revision = "ea4d1f681babbce9545c9c5f3d5194a789c89f5b"
+  version = "v1.2.0"
+
+[[projects]]
+  name = "github.com/labstack/echo"
+  packages = [
+    ".",
+    "middleware"
+  ]
   revision = "a5d81b8d4a627f3f49dcb3164ef2bb5239682227"
   version = "3.3.4"
 
 [[projects]]
   name = "github.com/labstack/gommon"
   packages = [
+    "bytes",
     "color",
-    "log"
+    "log",
+    "random"
   ]
   revision = "6fe1405d73ec4bd4cd8a4ac8e2a2b2bf95d03954"
   version = "0.2.4"
@@ -161,6 +178,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "fec821d1470621b7a24d68e93401524a42ff33b89f3e94557b39811a8e438791"
+  inputs-digest = "0ba3d803f6f2c0b7bfd7da612c4ddb712949c85f6aaefa8f9d5c00c797bbf7e1"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -72,9 +72,11 @@ ensure-swag:
 ifeq (, $(shell which swag))
 	go get -u github.com/swaggo/swag/cmd/swag
 endif
+	echo ensure swag
 
 ensure-dep:
 ifeq (, $(shell which dep))
 	go get -u github.com/golang/dep/cmd/dep
 endif
+	echo ensure dep
 
