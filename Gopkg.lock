@@ -14,6 +14,18 @@
   revision = "de5bf2ad457846296e2031421a34e2568e304e35"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/Songmu/axslogparser"
+  packages = ["."]
+  revision = "aeee6a8490c8e5475b306b4fa6348291fbd415db"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/Songmu/go-ltsv"
+  packages = ["."]
+  revision = "fa2196a290e61d8689cd018048cbb6f14802782b"
+
+[[projects]]
   name = "github.com/dgrijalva/jwt-go"
   packages = ["."]
   revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
@@ -90,6 +102,12 @@
   packages = ["."]
   revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
   version = "v0.0.3"
+
+[[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
 
 [[projects]]
   branch = "master"
@@ -178,6 +196,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "0ba3d803f6f2c0b7bfd7da612c4ddb712949c85f6aaefa8f9d5c00c797bbf7e1"
+  inputs-digest = "4b5753f717518ddcad3ffdcfeb8ec706fa8af383a64a2481ac8f551d020ee6c3"
   solver-name = "gps-cdcl"
   solver-version = 1
