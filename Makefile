@@ -6,7 +6,7 @@ GIN_PORT=3000
 # Go parameters
 GOCMD=go
 
-GOBUILD_ARGS=-o $(BINARY_TARGET_PATH) -v
+GOBUILD_ARGS=-o $(BINARY_TARGET_PATH) -v -gcflags='-N -l'
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
@@ -22,14 +22,15 @@ BINARY_TARGET_PATH=$(BUILD_TARGET_PATH)/$(BINARY_NAME)
 BINARY_TARGET_UNIX_PATH=$(BUILD_TARGET_PATH)/$(BINARY_UNIX)
 BINARY_TARGET_WINDOWS_PATH=$(BUILD_TARGET_PATH)/$(BINARY_WINDOWS)
 
-ensure-progs: ensure-swag ensure-dep
+ensure-progs: ensure-swag ensure-dep ensure-dlv ensure-gin
+	echo ensure-progs
 
 all: test rundev
 
 ensure:
 	dep ensure
 
-build: ensure-progs clean goformat swagger ensure
+build: ensure-progs ensure clean goformat swagger
 	$(GOBUILD) $(GOBUILD_ARGS)
 
 test: build
@@ -39,10 +40,13 @@ clean:
 	$(GOCLEAN)
 	rm -rf $(BUILD_TARGET_PATH)
 
+debug: ensure-dlv
+	dlv --listen=:2345 --headless=true --api-version=2 exec $(BINARY_TARGET_PATH)
+
 run: build
 	$(BINARY_TARGET_PATH)
 
-rundev:
+rundev:ensure-gin
 	gin -a $(APP_PORT) -p $(GIN_PORT) --bin $(BINARY_TARGET_PATH) --buildArgs $(GIN_BUILD_ARGS) run main.go
 
 # Cross compilation
@@ -80,3 +84,14 @@ ifeq (, $(shell which dep))
 endif
 	echo ensure dep
 
+ensure-dlv:
+ifeq (, $(shell which dep))
+	go get -u github.com/derekparker/delve/cmd/dlv
+endif
+	echo ensure dlv
+
+ensure-gin:
+ifeq (, $(shell which gin))
+	go get -u github.com/codegangsta/gin
+endif
+	echo ensure gin

@@ -44,7 +44,6 @@ func HelloWS(c echo.Context) error {
 	for {
 		err := ws.WriteJSON(response)
 		if err != nil {
-			//c.Logger().Debug(err)
 			return nil
 		}
 
