@@ -62,33 +62,33 @@
   version = "v1.2.0"
 
 [[projects]]
+  name = "github.com/jinzhu/gorm"
+  packages = [".","dialects/sqlite"]
+  revision = "6ed508ec6a4ecb3531899a69cbc746ccf65a4166"
+  version = "v1.9.1"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/jinzhu/inflection"
+  packages = ["."]
+  revision = "04140366298a54a039076d798123ffa108fff46c"
+
+[[projects]]
   name = "github.com/labstack/echo"
-  packages = [
-    ".",
-    "middleware"
-  ]
+  packages = [".","middleware"]
   revision = "a5d81b8d4a627f3f49dcb3164ef2bb5239682227"
   version = "3.3.4"
 
 [[projects]]
   name = "github.com/labstack/gommon"
-  packages = [
-    "bytes",
-    "color",
-    "log",
-    "random"
-  ]
+  packages = ["bytes","color","log","random"]
   revision = "6fe1405d73ec4bd4cd8a4ac8e2a2b2bf95d03954"
   version = "0.2.4"
 
 [[projects]]
   branch = "master"
   name = "github.com/mailru/easyjson"
-  packages = [
-    "buffer",
-    "jlexer",
-    "jwriter"
-  ]
+  packages = ["buffer","jlexer","jwriter"]
   revision = "8b799c424f57fa123fc63a99d6383bc6e4c02578"
 
 [[projects]]
@@ -102,6 +102,12 @@
   packages = ["."]
   revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
   version = "v0.0.3"
+
+[[projects]]
+  name = "github.com/mattn/go-sqlite3"
+  packages = ["."]
+  revision = "6c771bb9887719704b210e87e934f08be014bdb1"
+  version = "v1.6.0"
 
 [[projects]]
   name = "github.com/pkg/errors"
@@ -142,21 +148,13 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
-  packages = [
-    "acme",
-    "acme/autocert"
-  ]
+  packages = ["acme","acme/autocert"]
   revision = "12892e8c234f4fe6f6803f052061de9057903bb2"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
-  packages = [
-    "context",
-    "idna",
-    "webdav",
-    "webdav/internal/xml"
-  ]
+  packages = ["context","idna","webdav","webdav/internal/xml"]
   revision = "b68f30494add4df6bd8ef5e82803f308e7f7c59c"
 
 [[projects]]
@@ -167,23 +165,7 @@
 
 [[projects]]
   name = "golang.org/x/text"
-  packages = [
-    "collate",
-    "collate/build",
-    "internal/colltab",
-    "internal/gen",
-    "internal/tag",
-    "internal/triegen",
-    "internal/ucd",
-    "language",
-    "secure/bidirule",
-    "transform",
-    "unicode/bidi",
-    "unicode/cldr",
-    "unicode/norm",
-    "unicode/rangetable",
-    "width"
-  ]
+  packages = ["collate","collate/build","internal/colltab","internal/gen","internal/tag","internal/triegen","internal/ucd","language","secure/bidirule","transform","unicode/bidi","unicode/cldr","unicode/norm","unicode/rangetable","width"]
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
 
@@ -196,6 +178,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4b5753f717518ddcad3ffdcfeb8ec706fa8af383a64a2481ac8f551d020ee6c3"
+  inputs-digest = "cb601629778979bc101f5d8872f02bb4c1f615f51af30c1aaeed81f81745fd8c"
   solver-name = "gps-cdcl"
   solver-version = 1
