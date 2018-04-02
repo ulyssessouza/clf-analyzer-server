@@ -9,15 +9,9 @@ import (
 
 	"github.com/ulyssessouza/clf-analyzer-server/data"
 	"strings"
-	"github.com/jinzhu/gorm"
 )
 
 func StartIngestion(f *os.File) {
-	db, err := gorm.Open("sqlite3", "sqlite_clf_analyzer.db")
-	if err != nil {
-		panic("failed to connect database")
-	}
-	data.InitDb(db)
 	scanner := bufio.NewScanner(f)
 
 	for scanner.Scan() {
@@ -27,7 +21,6 @@ func StartIngestion(f *os.File) {
 		if err != nil {
 			fmt.Errorf("%s\n", err)
 		}
-
 		if _, ok := parser.(*logparser.Apache); !ok {
 			fmt.Errorf("Invalid format: %s\n", line)
 		}

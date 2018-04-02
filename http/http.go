@@ -1,13 +1,63 @@
 package http
 
 import (
-	"time"
+	"sync"
 	"net/http"
+
 	"github.com/labstack/echo"
 	"github.com/gorilla/websocket"
+	"github.com/ulyssessouza/clf-analyzer-server/data"
+	"fmt"
 )
 
 var upgrader = websocket.Upgrader{}
+var ScoreChannels ScoreChannelsArray
+
+type ScoreChannelsArray struct {
+	sync.Mutex
+	scoreChannels []chan struct{}
+}
+
+func StartListenTicks(c *chan struct{}) {
+	for  {
+		<-*c
+		ScoreChannels.Broadcast()
+	}
+}
+
+func (s *ScoreChannelsArray) Register(w chan struct{}) {
+	s.Lock()
+	defer s.Unlock()
+
+	s.scoreChannels = append(s.scoreChannels, w)
+}
+
+func (s *ScoreChannelsArray) Deregister(w chan struct{}) {
+	s.Lock()
+	defer s.Unlock()
+
+	// Delete not including the channel in the new slice
+	var newSlice []chan struct{}
+	for _, v := range s.scoreChannels {
+		if v == w {
+			continue
+		} else {
+			newSlice = append(newSlice, v)
+		}
+	}
+
+	s.scoreChannels  = newSlice
+}
+
+func (s *ScoreChannelsArray) Broadcast() {
+	s.Lock()
+	defer s.Unlock()
+
+	<-data.Ticker.C
+	for _, c := range s.scoreChannels  {
+		c <- struct{}{}
+	}
+}
 
 type HandlerResponse struct {
 	Message     string
@@ -27,27 +77,26 @@ func RootHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, r)
 }
 
-func TestHandler(c echo.Context) error {
-	response := HandlerResponse{"Test endpoint!!!", []*echo.Route{}}
-	return c.JSON(http.StatusOK, response)
-}
-
-func HelloWS(c echo.Context) error {
+func SectionsScore(c echo.Context) error {
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
 		return err
 	}
-	defer ws.Close()
 
-	response := HandlerResponse{"Test websocket endpoint!!!", []*echo.Route{}}
+	scoreChannel := make(chan struct{})
+	ScoreChannels.Register(scoreChannel)
+
+	defer ws.Close()
+	defer ScoreChannels.Deregister(scoreChannel)
 
 	for {
-		err := ws.WriteJSON(response)
+		err := ws.WriteJSON(data.Score)
 		if err != nil {
-			return nil
+			return err
 		}
 
-		time.Sleep(time.Second)
+		<-scoreChannel // Triggered by data.Ticker.C
 	}
-}
 
+	return nil
+}
