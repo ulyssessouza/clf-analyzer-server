@@ -22,17 +22,18 @@ BINARY_TARGET_PATH=$(BUILD_TARGET_PATH)/$(BINARY_NAME)
 BINARY_TARGET_UNIX_PATH=$(BUILD_TARGET_PATH)/$(BINARY_UNIX)
 BINARY_TARGET_WINDOWS_PATH=$(BUILD_TARGET_PATH)/$(BINARY_WINDOWS)
 
-ensure-progs: ensure-swag ensure-dep
+ensure-progs: ensure-swag ensure-dep ensure-dlv ensure-gin
+	echo ensure-progs
 
 all: test rundev
 
 ensure:
 	dep ensure
 
-build: ensure-progs clean goformat swagger
+build: ensure-progs ensure clean goformat swagger
 	$(GOBUILD) $(GOBUILD_ARGS)
 
-test: build ensure
+test: build
 	$(GOTEST) -v $(go list ./... | grep -v /vendor/)
 
 clean:
