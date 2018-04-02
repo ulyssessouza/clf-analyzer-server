@@ -7,7 +7,6 @@ import (
 	"github.com/labstack/echo"
 	"github.com/gorilla/websocket"
 	"github.com/ulyssessouza/clf-analyzer-server/data"
-	"fmt"
 )
 
 var upgrader = websocket.Upgrader{}
