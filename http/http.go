@@ -1,7 +1,6 @@
 package http
 
 import (
-	"sync"
 	"net/http"
 
 	"github.com/labstack/echo"
@@ -10,57 +9,21 @@ import (
 )
 
 var upgrader = websocket.Upgrader{}
-var ScoreChannels ScoreChannelsArray
 
-type ScoreChannelsArray struct {
-	sync.Mutex
-	scoreChannels []chan struct{}
-}
+var scoreChannels data.SynchBroadcastArray
+var alertChannels data.SynchBroadcastArray
 
-func StartListenTicks(c *chan struct{}) {
-	for  {
-		<-*c
-		ScoreChannels.Broadcast()
-	}
-}
-
-func (s *ScoreChannelsArray) Register(w chan struct{}) {
-	s.Lock()
-	defer s.Unlock()
-
-	s.scoreChannels = append(s.scoreChannels, w)
-}
-
-func (s *ScoreChannelsArray) Deregister(w chan struct{}) {
-	s.Lock()
-	defer s.Unlock()
-
-	// Delete not including the channel in the new slice
-	var newSlice []chan struct{}
-	for _, v := range s.scoreChannels {
-		if v == w {
-			continue
-		} else {
-			newSlice = append(newSlice, v)
+func StartListenTicks(c *chan int) {
+	for {
+		signal := <-*c
+		switch signal {
+		case data.SCORE:
+			scoreChannels.Broadcast(data.ScoreTicker)
+			break
+		case data.ALERT:
+			alertChannels.Broadcast(data.AlertTicker)
 		}
 	}
-
-	s.scoreChannels  = newSlice
-}
-
-func (s *ScoreChannelsArray) Broadcast() {
-	s.Lock()
-	defer s.Unlock()
-
-	<-data.Ticker.C
-	for _, c := range s.scoreChannels  {
-		c <- struct{}{}
-	}
-}
-
-type HandlerResponse struct {
-	Message     string
-	Endpoints   []*echo.Route
 }
 
 // RootHandler godoc
@@ -76,26 +39,49 @@ func RootHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, r)
 }
 
+type HandlerResponse struct {
+	Message     string
+	Endpoints   []*echo.Route
+}
+
 func SectionsScore(c echo.Context) error {
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
 		return err
 	}
+	defer ws.Close()
 
 	scoreChannel := make(chan struct{})
-	ScoreChannels.Register(scoreChannel)
-
-	defer ws.Close()
-	defer ScoreChannels.Deregister(scoreChannel)
+	scoreChannels.Register(scoreChannel)
+	defer scoreChannels.Deregister(scoreChannel)
 
 	for {
 		err := ws.WriteJSON(data.Score)
 		if err != nil {
 			return err
 		}
-
-		<-scoreChannel // Triggered by data.Ticker.C
+		<-scoreChannel // Triggered by data.ScoreTicker.C
 	}
+	return nil
+}
 
+func Alerts(c echo.Context) error {
+	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+	if err != nil {
+		return err
+	}
+	defer ws.Close()
+
+	alertsChannel := make(chan struct{})
+	alertChannels.Register(alertsChannel)
+	defer alertChannels.Deregister(alertsChannel)
+
+	for {
+		err := ws.WriteJSON(data.Alerts)
+		if err != nil {
+			return err
+		}
+		<-alertsChannel // Triggered by data.AlertTicker.C
+	}
 	return nil
 }

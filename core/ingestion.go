@@ -9,7 +9,11 @@ import (
 
 	"github.com/ulyssessouza/clf-analyzer-server/data"
 	"strings"
+	"time"
 )
+
+const ALERT_THRESHOLD = 10
+var overCharged = false
 
 func StartIngestion(f *os.File) {
 	scanner := bufio.NewScanner(f)
@@ -26,8 +30,22 @@ func StartIngestion(f *os.File) {
 		}
 
 		section := data.Section{Log: log, Section: getSection(log.RequestURI)}
+		data.Save(&section)
+	}
+}
 
-		data.SaveSection(&section)
+func UpdateAlert() {
+	for {
+		countSections := data.CountSectionsIn2Minutes()
+		fmt.Printf("count %d\n", countSections)
+		if !overCharged && countSections > ALERT_THRESHOLD {
+			overCharged = true
+			data.Save(&data.Alert{Overcharged: true})
+		} else if overCharged && countSections <= ALERT_THRESHOLD {
+			overCharged = false
+			data.Save(&data.Alert{Overcharged: false})
+		}
+		<-time.After(time.Second)
 	}
 }
 

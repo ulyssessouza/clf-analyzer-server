@@ -10,9 +10,17 @@ import (
 
 const MAX_SCORES = 10
 
-var db *gorm.DB
+const (
+	SCORE = iota
+	ALERT = iota
+)
+
 var Score []SectionScoreEntry
-var Ticker = time.NewTicker(10 * time.Second)
+var Alerts []AlertEntry
+
+var db *gorm.DB
+var ScoreTicker = time.NewTicker(1 * time.Second)
+var AlertTicker = time.NewTicker(1 * time.Second)
 
 // Model for Section's table
 type Section struct {
@@ -21,10 +29,22 @@ type Section struct {
 	Section string
 }
 
+// Model for Alert's table
+type Alert struct {
+	gorm.Model
+	Overcharged bool
+}
+
 // Return type for GetSectionsScore
 type SectionScoreEntry struct {
 	Hits uint64
 	Section string
+}
+
+// Return type for GetSectionsScore
+type AlertEntry struct {
+	AlertTime time.Time
+	Overcharged bool
 }
 
 func OpenDb(dbFilename string) *gorm.DB {
@@ -39,6 +59,7 @@ func OpenDb(dbFilename string) *gorm.DB {
 func InitDb(dbLocal *gorm.DB) {
 	db = dbLocal
 	db.AutoMigrate(&Section{})
+	db.AutoMigrate(&Alert{})
 }
 
 func CloseDb() {
@@ -47,17 +68,19 @@ func CloseDb() {
 	}
 }
 
-func GetBySection(sectionId string) []Section {
-	var sections []Section
-	db.Where("section = ?", sectionId).Find(&sections)
-	return sections
-}
-
-func StartScoreLoop(scoreChannel *chan struct{}) {
+func StartScoreLoop(scoreChannel *chan int) {
 	for {
 		Score = GetSectionsScore(MAX_SCORES)
-		<-Ticker.C // Global ticker triggered every 10s
-		*scoreChannel <- struct{}{} // Trigger endpoint to write the new Score to the client
+		<-ScoreTicker.C             // Global ScoreTicker triggered every 10s
+		*scoreChannel <- SCORE // Trigger endpoint to write the new Score to the client
+	}
+}
+
+func StartAlertLoop(alertChannel *chan int) {
+	for {
+		Alerts = GetAlerts(MAX_SCORES)
+		<-AlertTicker.C        // Global AlertTicker triggered every 10s
+		*alertChannel <- ALERT // Trigger endpoint to write the new Alert to the client
 	}
 }
 
@@ -68,6 +91,23 @@ func GetSectionsScore(n int) []SectionScoreEntry {
 	return sections
 }
 
-func SaveSection(section *Section) {
-	db.Save(section)
+func GetAlerts(n int) []AlertEntry {
+	var alerts []AlertEntry
+	db.Raw("SELECT alerts.created_at as alert_time, alerts.overcharged FROM alerts ORDER BY alerts.created_at DESC LIMIT ?", n).Scan(&alerts)
+	return alerts
+}
+
+type Count struct {
+	N int
+}
+func CountSectionsIn2Minutes() int {
+	var count Count
+	now := time.Now()
+	last2Minutes := now.Add(-2 * time.Minute) // 2 minutes before
+	db.Raw("SELECT COUNT(*) as n FROM sections WHERE sections.created_at > ?", last2Minutes).Scan(&count)
+	return count.N
+}
+
+func Save(entry interface{}) {
+	db.Save(entry)
 }

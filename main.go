@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"fmt"
+	"flag"
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
@@ -14,18 +15,22 @@ import (
 	"github.com/ulyssessouza/clf-analyzer-server/data"
 )
 
+var port = flag.Int("port", 8000, "port to listen on")
+
 func main() {
-	var cacheRefreshChan = make(chan struct{}) // data.Ticker -> select -> ScoreChannels.Broadcast()
+	flag.Parse()
+	var cacheRefreshChan = make(chan int) // data.ticker -> select -> scoreChannels.Broadcast()
 	db := data.OpenDb("sqlite_clf_analyzer.db")
 	data.InitDb(db)
 	go core.StartIngestion(os.Stdin)
 	go http.StartListenTicks(&cacheRefreshChan)
 	go data.StartScoreLoop(&cacheRefreshChan)
+	go data.StartAlertLoop(&cacheRefreshChan)
+	go core.UpdateAlert()
 
 	defer data.CloseDb()
 	defer close(cacheRefreshChan)
 
-	port := 8000 // TODO To be set from command line
 	e := echo.New()
 	e.HideBanner = true
 
@@ -35,6 +40,7 @@ func main() {
 	e.GET("/", http.RootHandler)
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.GET("/score", http.SectionsScore)
+	e.GET("/alert", http.Alerts)
 
-	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", port)))
+	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", *port)))
 }
