@@ -2,3 +2,4 @@
 dist
 docs
 vendor
+sqlite_clf_analyzer.db

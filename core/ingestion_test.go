@@ -3,6 +3,7 @@ package core
 import (
 	"os"
 	"testing"
+
 	"github.com/ulyssessouza/clf-analyzer-server/data"
 	"github.com/jinzhu/gorm"
 

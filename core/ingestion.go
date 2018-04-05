@@ -9,15 +9,13 @@ import (
 
 	"github.com/ulyssessouza/clf-analyzer-server/data"
 	"strings"
-	"github.com/jinzhu/gorm"
+	"time"
 )
 
+const AlertShreshold = 10
+var ChargeIn2Minutes uint64 = 0
+
 func StartIngestion(f *os.File) {
-	db, err := gorm.Open("sqlite3", "sqlite_clf_analyzer.db")
-	if err != nil {
-		panic("failed to connect database")
-	}
-	data.InitDb(db)
 	scanner := bufio.NewScanner(f)
 
 	for scanner.Scan() {
@@ -27,14 +25,27 @@ func StartIngestion(f *os.File) {
 		if err != nil {
 			fmt.Errorf("%s\n", err)
 		}
-
 		if _, ok := parser.(*logparser.Apache); !ok {
 			fmt.Errorf("Invalid format: %s\n", line)
 		}
 
 		section := data.Section{Log: log, Section: getSection(log.RequestURI)}
+		data.Save(&section)
+	}
+}
 
-		data.SaveSection(&section)
+func UpdateAlert() {
+	for {
+		var countSections = data.CountSectionsIn2Minutes()
+
+		if ChargeIn2Minutes <= AlertShreshold && countSections > AlertShreshold {
+			data.Save(&data.Alert{Overcharged: true})
+		} else if ChargeIn2Minutes > AlertShreshold && countSections <= AlertShreshold {
+			data.Save(&data.Alert{Overcharged: false})
+		}
+
+		ChargeIn2Minutes = countSections
+		<-time.After(time.Second) // Deliberated time :D
 	}
 }
 
