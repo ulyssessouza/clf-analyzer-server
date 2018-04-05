@@ -12,8 +12,8 @@ import (
 	"time"
 )
 
-const ALERT_THRESHOLD = 10
-var overCharged = false
+const AlertShreshold = 10
+var ChargeIn2Minutes uint64 = 0
 
 func StartIngestion(f *os.File) {
 	scanner := bufio.NewScanner(f)
@@ -36,16 +36,16 @@ func StartIngestion(f *os.File) {
 
 func UpdateAlert() {
 	for {
-		countSections := data.CountSectionsIn2Minutes()
-		fmt.Printf("count %d\n", countSections)
-		if !overCharged && countSections > ALERT_THRESHOLD {
-			overCharged = true
+		var countSections = data.CountSectionsIn2Minutes()
+
+		if ChargeIn2Minutes <= AlertShreshold && countSections > AlertShreshold {
 			data.Save(&data.Alert{Overcharged: true})
-		} else if overCharged && countSections <= ALERT_THRESHOLD {
-			overCharged = false
+		} else if ChargeIn2Minutes > AlertShreshold && countSections <= AlertShreshold {
 			data.Save(&data.Alert{Overcharged: false})
 		}
-		<-time.After(time.Second)
+
+		ChargeIn2Minutes = countSections
+		<-time.After(time.Second) // Deliberated time :D
 	}
 }
 

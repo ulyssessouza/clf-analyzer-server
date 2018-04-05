@@ -9,6 +9,7 @@ import (
 )
 
 const MAX_SCORES = 10
+const MAX_ALERTS = MAX_SCORES
 
 const (
 	SCORE = iota
@@ -16,7 +17,7 @@ const (
 )
 
 var Score []SectionScoreEntry
-var Alerts []AlertEntry
+var Alerts []Alert
 
 var db *gorm.DB
 var ScoreTicker = time.NewTicker(1 * time.Second)
@@ -39,12 +40,6 @@ type Alert struct {
 type SectionScoreEntry struct {
 	Hits uint64
 	Section string
-}
-
-// Return type for GetSectionsScore
-type AlertEntry struct {
-	AlertTime time.Time
-	Overcharged bool
 }
 
 func OpenDb(dbFilename string) *gorm.DB {
@@ -78,7 +73,7 @@ func StartScoreLoop(scoreChannel *chan int) {
 
 func StartAlertLoop(alertChannel *chan int) {
 	for {
-		Alerts = GetAlerts(MAX_SCORES)
+		Alerts = GetAlerts(MAX_ALERTS)
 		<-AlertTicker.C        // Global AlertTicker triggered every 10s
 		*alertChannel <- ALERT // Trigger endpoint to write the new Alert to the client
 	}
@@ -91,16 +86,16 @@ func GetSectionsScore(n int) []SectionScoreEntry {
 	return sections
 }
 
-func GetAlerts(n int) []AlertEntry {
-	var alerts []AlertEntry
-	db.Raw("SELECT alerts.created_at as alert_time, alerts.overcharged FROM alerts ORDER BY alerts.created_at DESC LIMIT ?", n).Scan(&alerts)
+func GetAlerts(n int) []Alert {
+	var alerts []Alert
+	db.Raw("SELECT * FROM alerts ORDER BY alerts.created_at DESC LIMIT ?", n).Scan(&alerts)
 	return alerts
 }
 
 type Count struct {
-	N int
+	N uint64
 }
-func CountSectionsIn2Minutes() int {
+func CountSectionsIn2Minutes() uint64 {
 	var count Count
 	now := time.Now()
 	last2Minutes := now.Add(-2 * time.Minute) // 2 minutes before

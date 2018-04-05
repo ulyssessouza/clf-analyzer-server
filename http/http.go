@@ -1,17 +1,40 @@
 package http
 
 import (
+	"time"
 	"net/http"
 
 	"github.com/labstack/echo"
 	"github.com/gorilla/websocket"
 	"github.com/ulyssessouza/clf-analyzer-server/data"
+	"github.com/ulyssessouza/clf-analyzer-server/core"
 )
 
 var upgrader = websocket.Upgrader{}
 
 var scoreChannels data.SynchBroadcastArray
 var alertChannels data.SynchBroadcastArray
+
+type AlertEntry struct {
+	AlertTime time.Time
+	Charge    uint64
+	Limit     uint64
+}
+
+func getAlertEntriesSlice(alerts []data.Alert) []AlertEntry {
+	var alertEntries []AlertEntry
+	for _, alert := range alerts {
+		var charge uint64
+		if alert.Overcharged {
+			charge = core.AlertShreshold + 1
+		} else {
+			charge = 0
+		}
+		alertEntry := AlertEntry{AlertTime: alert.CreatedAt, Charge: charge, Limit: core.AlertShreshold}
+		alertEntries = append(alertEntries, alertEntry)
+	}
+	return alertEntries
+}
 
 func StartListenTicks(c *chan int) {
 	for {
@@ -77,7 +100,8 @@ func Alerts(c echo.Context) error {
 	defer alertChannels.Deregister(alertsChannel)
 
 	for {
-		err := ws.WriteJSON(data.Alerts)
+		alertEntries := getAlertEntriesSlice(data.Alerts)
+		err := ws.WriteJSON(alertEntries)
 		if err != nil {
 			return err
 		}

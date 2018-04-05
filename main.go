@@ -17,9 +17,17 @@ import (
 
 var port = flag.Int("port", 8000, "port to listen on")
 
+func closeConnections() {
+	// TODO Gracefully close all open connections
+	// for all conns c {
+	//     c.WriteControl(CloseMessage, FormatCloseMessage(CloseGoingAway, ""), time.Now().Add(1 * time.Second))
+	// }
+}
+
 func main() {
 	flag.Parse()
-	var cacheRefreshChan = make(chan int) // data.ticker -> select -> scoreChannels.Broadcast()
+	var cacheRefreshChan = make(chan int) // data.ticker -> SQL select -> scoreChannels.Broadcast()
+
 	db := data.OpenDb("sqlite_clf_analyzer.db")
 	data.InitDb(db)
 	go core.StartIngestion(os.Stdin)
@@ -33,14 +41,15 @@ func main() {
 
 	e := echo.New()
 	e.HideBanner = true
-
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-
 	e.GET("/", http.RootHandler)
-	e.GET("/swagger/*", echoSwagger.WrapHandler)
-	e.GET("/score", http.SectionsScore)
-	e.GET("/alert", http.Alerts)
+
+	gV1 := e.Group("/v1")
+	gV1.GET("/", http.RootHandler)
+	gV1.GET("/swagger/*", echoSwagger.WrapHandler)
+	gV1.GET("/score", http.SectionsScore)
+	gV1.GET("/alert", http.Alerts)
 
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", *port)))
 }
