@@ -1,15 +1,4 @@
-[[constraint]]
-  name = "github.com/labstack/echo"
-  version = "3.3.4"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/swaggo/echo-swagger"
-
-[[constraint]]
-  name = "github.com/swaggo/swag"
-  version = "1.1.1"
-
-[prune]
-  go-tests = true
-  unused-packages = true
+[[override]]
+  name = "github.com/hpcloud/tail"
+  source = "https://github.com/vsco/tail.git"
+  revision = "000912af8de2d2b9d184786b4cf4c3542b7884e5"
