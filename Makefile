@@ -23,14 +23,14 @@ BINARY_TARGET_UNIX_PATH=$(BUILD_TARGET_PATH)/$(BINARY_UNIX)
 BINARY_TARGET_WINDOWS_PATH=$(BUILD_TARGET_PATH)/$(BINARY_WINDOWS)
 
 ensure-progs: ensure-swag ensure-dep ensure-dlv ensure-gin
-	echo ensure-progs
+	@echo ensure-progs
 
 all: test rundev
 
 ensure:
 	dep ensure
 
-build: ensure-progs ensure clean goformat swagger
+build: ensure-progs clean goformat swagger
 	$(GOBUILD) $(GOBUILD_ARGS)
 
 test: build
@@ -62,7 +62,7 @@ docker-build: check-env-GOPATH goformat
 # Util
 check-env-%:
 	@ if [ "${${*}}" = "" ]; then \
-		echo "Environment variable $* not set"; \
+		@echo "Environment variable $* not set"; \
 		exit 1; \
 	fi
 
@@ -76,22 +76,22 @@ ensure-swag:
 ifeq (, $(shell which swag))
 	go get -u github.com/swaggo/swag/cmd/swag
 endif
-	echo ensure swag
+	@echo ensure swag
 
 ensure-dep:
 ifeq (, $(shell which dep))
 	go get -u github.com/golang/dep/cmd/dep
 endif
-	echo ensure dep
+	@echo ensure dep
 
 ensure-dlv:
 ifeq (, $(shell which dep))
 	go get -u github.com/derekparker/delve/cmd/dlv
 endif
-	echo ensure dlv
+	@echo ensure dlv
 
 ensure-gin:
 ifeq (, $(shell which gin))
 	go get -u github.com/codegangsta/gin
 endif
-	echo ensure gin
+	@echo ensure gin

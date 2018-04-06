@@ -1,9 +1,7 @@
 package core
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 
 	logparser "github.com/Songmu/axslogparser"
 
@@ -15,11 +13,11 @@ import (
 const AlertShreshold = 10
 var ChargeIn2Minutes uint64 = 0
 
-func StartIngestion(f *os.File) {
-	scanner := bufio.NewScanner(f)
+func StartIngestion(inputChannel *chan string) {
+	for {
+		line := <-*inputChannel
 
-	for scanner.Scan() {
-		line := scanner.Text()
+		fmt.Printf("StartIngestion: %s\n", line)
 
 		parser, log, err := logparser.GuessParser(line)
 		if err != nil {
@@ -45,7 +43,7 @@ func UpdateAlert() {
 		}
 
 		ChargeIn2Minutes = countSections
-		<-time.After(time.Second) // Deliberated time :D
+		<-time.After(time.Second) // Deliberated time of 1 second :D
 	}
 }
 
