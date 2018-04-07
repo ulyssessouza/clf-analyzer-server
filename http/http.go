@@ -13,6 +13,11 @@ import (
 
 const apiVersion1 = "/v1"
 
+const AckOK = "OK"
+type Ack struct {
+	Code string
+}
+
 type AlertEntry struct {
 	AlertTime time.Time
 	Charge    uint64

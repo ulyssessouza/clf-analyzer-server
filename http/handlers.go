@@ -9,11 +9,6 @@ import (
 
 var upgrader = websocket.Upgrader{}
 
-const AckOK = "OK"
-type Ack struct {
-	Code string
-}
-
 func SectionsScoreHandler(c echo.Context) error {
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
