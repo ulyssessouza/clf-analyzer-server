@@ -59,9 +59,7 @@ func StartHttp(port int) {
 	e.HideBanner = true
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-	e.GET("/", RootHandler)
 	gV1 := e.Group(apiVersion1)
-	gV1.GET("/", RootHandler)
 	gV1.GET("/swagger/*", echoSwagger.WrapHandler)
 	gV1.GET("/score", SectionsScoreHandler)
 	gV1.GET("/alert", AlertsHandler)

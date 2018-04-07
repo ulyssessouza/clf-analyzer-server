@@ -86,7 +86,7 @@ func HitsHandler(c echo.Context) error {
 }
 
 func checkAck(ws *websocket.Conn) bool {
-	var ack = Ack{}
-	err := ws.ReadJSON(ack)
+	var ack Ack
+	err := ws.ReadJSON(&ack)
 	return err == nil && ack.Code == AckOK
 }
