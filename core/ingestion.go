@@ -15,14 +15,10 @@ var ChargeIn2Minutes uint64 = 0
 
 func StartIngestion(inputChannel *chan string) {
 	for line := range *inputChannel {
-		fmt.Printf("StartIngestion: %s\n", line)
-
-		parser, log, err := logparser.GuessParser(line)
+		_, log, err := logparser.GuessParser(line)
 		if err != nil {
-			fmt.Errorf("%s\n", err)
-		}
-		if _, ok := parser.(*logparser.Apache); !ok {
-			fmt.Errorf("Invalid format: %s\n", line)
+			fmt.Errorf("Ignoring malformed line: %s\n", err)
+			continue
 		}
 
 		section := data.Log{Log: log, Section: getSection(log.RequestURI)}
