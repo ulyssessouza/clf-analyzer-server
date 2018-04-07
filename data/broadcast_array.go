@@ -7,7 +7,12 @@ import (
 
 type SynchBroadcastArray struct {
 	sync.Mutex
+	*time.Ticker
 	channels []chan struct{}
+}
+
+func NewSynchBroadcastArray(tickerPeriodInSecs time.Duration) *SynchBroadcastArray {
+	return &SynchBroadcastArray{Ticker: time.NewTicker(tickerPeriodInSecs * time.Second)}
 }
 
 func (s *SynchBroadcastArray) Register(w chan struct{}) {
@@ -31,11 +36,11 @@ func (s *SynchBroadcastArray) Deregister(w chan struct{}) {
 	s.channels = newSlice
 }
 
-func (s *SynchBroadcastArray) Broadcast(t *time.Ticker) {
+func (s *SynchBroadcastArray) Broadcast() {
 	s.Lock()
 	defer s.Unlock()
 
-	<-t.C
+	<-s.C // Ticker's channel
 	for _, c := range s.channels {
 		c <- struct{}{}
 	}

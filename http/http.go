@@ -1,16 +1,17 @@
 package http
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/ulyssessouza/clf-analyzer-server/data"
 	"github.com/ulyssessouza/clf-analyzer-server/core"
+	"github.com/labstack/echo"
+	"github.com/swaggo/echo-swagger"
+	"github.com/labstack/echo/middleware"
 )
 
-// Real singletons
-var scoreChannels data.SynchBroadcastArray
-var alertChannels data.SynchBroadcastArray
-var hitsChannels data.SynchBroadcastArray
+const apiVersion1 = "/v1"
 
 type AlertEntry struct {
 	AlertTime time.Time
@@ -38,12 +39,28 @@ func StartListenTicks(c *chan int) {
 		signal := <-*c
 		switch signal {
 		case data.SCORE:
-			scoreChannels.Broadcast(data.ScoreTicker)
+			data.ScoreChannels.Broadcast()
 			break
 		case data.ALERT:
-			alertChannels.Broadcast(data.AlertTicker)
+			data.AlertChannels.Broadcast()
 		case data.HIT:
-			hitsChannels.Broadcast(data.HitsTicker)
+			data.HitsChannels.Broadcast()
 		}
 	}
+}
+
+func StartHttp(port int) {
+	e := echo.New()
+	e.HideBanner = true
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+	e.GET("/", RootHandler)
+	gV1 := e.Group(apiVersion1)
+	gV1.GET("/", RootHandler)
+	gV1.GET("/swagger/*", echoSwagger.WrapHandler)
+	gV1.GET("/score", SectionsScoreHandler)
+	gV1.GET("/alert", AlertsHandler)
+	gV1.GET("/hits", HitsHandler)
+
+	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", port)))
 }

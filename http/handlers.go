@@ -36,8 +36,8 @@ func SectionsScoreHandler(c echo.Context) error {
 	defer ws.Close()
 
 	scoreChannel := make(chan struct{})
-	scoreChannels.Register(scoreChannel)
-	defer scoreChannels.Deregister(scoreChannel)
+	data.ScoreChannels.Register(scoreChannel)
+	defer data.ScoreChannels.Deregister(scoreChannel)
 
 	for {
 		err := ws.WriteJSON(data.Score)
@@ -57,8 +57,8 @@ func AlertsHandler(c echo.Context) error {
 	defer ws.Close()
 
 	alertsChannel := make(chan struct{})
-	alertChannels.Register(alertsChannel)
-	defer alertChannels.Deregister(alertsChannel)
+	data.AlertChannels.Register(alertsChannel)
+	defer data.AlertChannels.Deregister(alertsChannel)
 
 	for {
 		alertEntries := getAlertEntriesSlice(data.Alerts)
@@ -79,8 +79,8 @@ func HitsHandler(c echo.Context) error {
 	defer ws.Close()
 
 	hitsChannel := make(chan struct{})
-	hitsChannels.Register(hitsChannel)
-	defer hitsChannels.Deregister(hitsChannel)
+	data.HitsChannels.Register(hitsChannel)
+	defer data.HitsChannels.Deregister(hitsChannel)
 
 	for {
 		err := ws.WriteJSON(data.Hits)

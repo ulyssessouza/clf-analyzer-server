@@ -14,9 +14,7 @@ const AlertShreshold = 10
 var ChargeIn2Minutes uint64 = 0
 
 func StartIngestion(inputChannel *chan string) {
-	for {
-		line := <-*inputChannel
-
+	for line := range *inputChannel {
 		fmt.Printf("StartIngestion: %s\n", line)
 
 		parser, log, err := logparser.GuessParser(line)
@@ -27,7 +25,7 @@ func StartIngestion(inputChannel *chan string) {
 			fmt.Errorf("Invalid format: %s\n", line)
 		}
 
-		section := data.Section{Log: log, Section: getSection(log.RequestURI)}
+		section := data.Log{Log: log, Section: getSection(log.RequestURI)}
 		data.Save(&section)
 	}
 }

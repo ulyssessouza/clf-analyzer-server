@@ -43,9 +43,9 @@ func TestGetFirstSections(t *testing.T) {
 	const sec2 = "/section2"
 	var sections []data.SectionScoreEntry
 
-	section1 := &data.Section{Log: &logparser.Log{RequestURI: sec1}, Section: sec1}
+	section1 := &data.Log{Log: &logparser.Log{RequestURI: sec1}, Section: sec1}
 	data.SaveSection(section1)
-	section1 = &data.Section{Log: &logparser.Log{RequestURI: sec1}, Section: sec1}
+	section1 = &data.Log{Log: &logparser.Log{RequestURI: sec1}, Section: sec1}
 	data.SaveSection(section1)
 
 	sections = data.GetSectionsScore(MAX_RESULTS)
@@ -56,11 +56,11 @@ func TestGetFirstSections(t *testing.T) {
 		t.Errorf("Got %v expected %v", sections[0].Section, sec1)
 	}
 
-	section2 := &data.Section{Log: &logparser.Log{RequestURI: sec2}, Section: sec2}
+	section2 := &data.Log{Log: &logparser.Log{RequestURI: sec2}, Section: sec2}
 	data.SaveSection(section2)
-	section2 = &data.Section{Log: &logparser.Log{RequestURI: sec2}, Section: sec2}
+	section2 = &data.Log{Log: &logparser.Log{RequestURI: sec2}, Section: sec2}
 	data.SaveSection(section2)
-	section2 = &data.Section{Log: &logparser.Log{RequestURI: sec2}, Section: sec2}
+	section2 = &data.Log{Log: &logparser.Log{RequestURI: sec2}, Section: sec2}
 	data.SaveSection(section2)
 
 	sections = data.GetSectionsScore(MAX_RESULTS)
