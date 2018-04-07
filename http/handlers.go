@@ -1,8 +1,6 @@
 package http
 
 import (
-	"net/http"
-
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo"
 
@@ -11,21 +9,9 @@ import (
 
 var upgrader = websocket.Upgrader{}
 
-type HandlerResponse struct {
-	Message     string
-	Endpoints   []*echo.Route
-}
-// RootHandler godoc
-// @Summary List handlers
-// @Description lists all the handlers on the app
-// @ID root-handler
-// @Accept  json
-// @Produce  json
-// @Success 200 {object} http.HandlerResponse
-// @Router / [get]
-func RootHandler(c echo.Context) error {
-	r := HandlerResponse{"Available endpoints", c.Echo().Routes()}
-	return c.JSON(http.StatusOK, r)
+const AckOK = "OK"
+type Ack struct {
+	Code string
 }
 
 func SectionsScoreHandler(c echo.Context) error {
@@ -40,6 +26,10 @@ func SectionsScoreHandler(c echo.Context) error {
 	defer data.ScoreChannels.Deregister(scoreChannel)
 
 	for {
+		if !checkAck(ws) {
+			break
+		}
+
 		err := ws.WriteJSON(data.Score)
 		if err != nil {
 			return err
@@ -61,8 +51,12 @@ func AlertsHandler(c echo.Context) error {
 	defer data.AlertChannels.Deregister(alertsChannel)
 
 	for {
+		if !checkAck(ws) {
+			break
+		}
+
 		alertEntries := getAlertEntriesSlice(data.Alerts)
-		err := ws.WriteJSON(alertEntries)
+		err = ws.WriteJSON(alertEntries)
 		if err != nil {
 			return err
 		}
@@ -83,6 +77,10 @@ func HitsHandler(c echo.Context) error {
 	defer data.HitsChannels.Deregister(hitsChannel)
 
 	for {
+		if !checkAck(ws) {
+			break
+		}
+
 		err := ws.WriteJSON(data.Hits)
 		if err != nil {
 			return err
@@ -90,4 +88,10 @@ func HitsHandler(c echo.Context) error {
 		<-hitsChannel // Triggered by data.HitsTicker.C
 	}
 	return nil
+}
+
+func checkAck(ws *websocket.Conn) bool {
+	var ack = Ack{}
+	err := ws.ReadJSON(ack)
+	return err == nil && ack.Code == AckOK
 }
