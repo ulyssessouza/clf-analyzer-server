@@ -12,7 +12,7 @@ GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 
 BUILD_TARGET_PATH=dist
-BINARY_NAME=clf-anayzer-server
+BINARY_NAME=clf-analyzer-server
 BINARY_UNIX=$(BINARY_NAME)_unix
 BINARY_WINDOWS=$(BINARY_NAME)_win
 
