@@ -15,6 +15,10 @@ func NewSynchBroadcastArray(tickerPeriodInSecs time.Duration) *SynchBroadcastArr
 	return &SynchBroadcastArray{Ticker: time.NewTicker(tickerPeriodInSecs * time.Second)}
 }
 
+func (s *SynchBroadcastArray) Count() int {
+	return len(s.channels)
+}
+
 func (s *SynchBroadcastArray) Register(w chan struct{}) {
 	s.Lock()
 	defer s.Unlock()
