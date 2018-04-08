@@ -72,7 +72,9 @@ func initTestDb() {
 }
 
 func deleteDbFile() {
-	sqlDao.Close()
+	if sqlDao != nil {
+		sqlDao.Close()
+	}
 
 	if _, err := os.Stat(dbFileName); err == nil {
 		os.Remove(dbFileName)
