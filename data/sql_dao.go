@@ -32,7 +32,7 @@ func (s *SqlDao) Open(dbFilename string) {
 
 func (s *SqlDao) Close() {
 	if s.DB != nil {
-		s.Close()
+		s.DB.Close()
 	}
 }
 
@@ -79,5 +79,5 @@ func (s *SqlDao) CountSectionsInDuration(d time.Duration) int {
 }
 
 func (s *SqlDao) Save(entry interface{}) {
-	s.Save(entry)
+	s.DB.Save(entry)
 }
