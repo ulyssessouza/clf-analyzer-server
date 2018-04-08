@@ -5,37 +5,29 @@ import (
 	"testing"
 
 	"github.com/ulyssessouza/clf-analyzer-server/data"
-	"github.com/jinzhu/gorm"
 
 	logparser "github.com/Songmu/axslogparser"
+	"github.com/stretchr/testify/assert"
 )
 
-const dbFilename = "sqlite_testdb.db"
 const MAX_RESULTS = 3
+const dbFileName = "sqlite_testdb.db"
+var sqlDao data.Dao
 
-func initTestDb() {
-	deleteDbFile()
-	db, err := gorm.Open("sqlite3", dbFilename)
-	db.LogMode(true)
-	if err != nil {
-		panic("failed to connect database")
-	}
-	data.InitDb(db)
-}
+// Test for the alert logic
+func TestShouldAlert(t *testing.T) {
+	const alertHitsThreshold = 5
+	actualHitCount := alertHitsThreshold
+	newHitCount := actualHitCount // Simulate new value for count adding one entry
 
-func deleteDbFile() {
-	data.CloseDb()
+	assert.Equal(t, 0, shouldAlert(0, newHitCount, alertHitsThreshold))
 
-	if _, err := os.Stat(dbFilename); err == nil {
-		os.Remove(dbFilename)
-	}
-}
+	actualHitCount = newHitCount
+	newHitCount++ // Adding a new log line
+	assert.Equal(t, 1, shouldAlert(actualHitCount, newHitCount, alertHitsThreshold))
 
-func TestMain(m *testing.M) {
-	initTestDb()
-	retCode := m.Run()
-	deleteDbFile()
-	os.Exit(retCode)
+	actualHitCount = newHitCount
+	assert.Equal(t, -1, shouldAlert(actualHitCount, alertHitsThreshold - 1, alertHitsThreshold))
 }
 
 func TestGetFirstSections(t *testing.T) {
@@ -44,11 +36,11 @@ func TestGetFirstSections(t *testing.T) {
 	var sections []data.SectionScoreEntry
 
 	section1 := &data.Log{Log: &logparser.Log{RequestURI: sec1}, Section: sec1}
-	data.SaveSection(section1)
+	sqlDao.Save(section1)
 	section1 = &data.Log{Log: &logparser.Log{RequestURI: sec1}, Section: sec1}
-	data.SaveSection(section1)
+	sqlDao.Save(section1)
 
-	sections = data.GetSectionsScore(MAX_RESULTS)
+	sections = sqlDao.GetSectionsScore(MAX_RESULTS)
 	if len(sections) != 1 {
 		t.Errorf("Got %v expected %v", len(sections), 1)
 	}
@@ -57,17 +49,39 @@ func TestGetFirstSections(t *testing.T) {
 	}
 
 	section2 := &data.Log{Log: &logparser.Log{RequestURI: sec2}, Section: sec2}
-	data.SaveSection(section2)
+	sqlDao.Save(section2)
 	section2 = &data.Log{Log: &logparser.Log{RequestURI: sec2}, Section: sec2}
-	data.SaveSection(section2)
+	sqlDao.Save(section2)
 	section2 = &data.Log{Log: &logparser.Log{RequestURI: sec2}, Section: sec2}
-	data.SaveSection(section2)
+	sqlDao.Save(section2)
 
-	sections = data.GetSectionsScore(MAX_RESULTS)
+	sections = sqlDao.GetSectionsScore(MAX_RESULTS)
 	if len(sections) != 2 {
 		t.Errorf("Got %v expected %v", len(sections), 2)
 	}
 	if sections[0].Section != sec2 {
 		t.Errorf("Got %v expected %v", sections[0].Section, sec2)
 	}
+}
+
+func initTestDb() {
+	deleteDbFile()
+
+	sqlDao = data.NewSqlDao(dbFileName)
+	sqlDao.Init()
+}
+
+func deleteDbFile() {
+	sqlDao.Close()
+
+	if _, err := os.Stat(dbFileName); err == nil {
+		os.Remove(dbFileName)
+	}
+}
+
+func TestMain(m *testing.M) {
+	initTestDb()
+	retCode := m.Run()
+	deleteDbFile()
+	os.Exit(retCode)
 }

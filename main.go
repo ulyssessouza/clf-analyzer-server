@@ -12,14 +12,7 @@ import (
 var Port = flag.Int("port", 8000, "port to listen on")
 var tailFlag = flag.String("tail", "stdin", "file to tail")
 
-func closeConnections() {
-	// TODO Gracefully close all open connections
-	// for all conns c {
-	//     c.WriteControl(CloseMessage, FormatCloseMessage(CloseGoingAway, ""), time.Now().Add(1 * time.Second))
-	// }
-}
-
-func startGoroutines(inputLineChan *chan string, cacheRefreshChan *chan int) {
+func startGoroutines(dao *data.Dao, inputLineChan *chan string, cacheRefreshChan *chan int) {
 	// Choose input mode
 	if tailFlag != nil && *tailFlag != "" && *tailFlag != "stdin" {
 		go inputFromTail(inputLineChan, *tailFlag)
@@ -27,27 +20,28 @@ func startGoroutines(inputLineChan *chan string, cacheRefreshChan *chan int) {
 		go inputFromStdIn(inputLineChan)
 	}
 
-	go core.StartIngestion(inputLineChan) // Starts ingesting lines included in the channel by the previous goroutines
+	go core.IngestionLoop(dao, inputLineChan) // Starts ingesting lines included in the channel by the previous goroutines
 
 	go http.StartListenTicks(cacheRefreshChan) // Listen ticks
-	go data.StartScoreLoop(cacheRefreshChan)
-	go data.StartAlertLoop(cacheRefreshChan)
-	go data.StartHitsLoop(cacheRefreshChan)
-	go core.UpdateAlert()
+
+	go data.StartScoreLoop(dao, cacheRefreshChan)
+	go data.StartAlertLoop(dao, cacheRefreshChan)
+	go data.StartHitsLoop(dao, cacheRefreshChan)
+	go core.UpdateAlertLoop(dao)
 }
 
 func main() {
 	flag.Parse()
 
-	db := data.OpenDb("sqlite_clf_analyzer.db")
-	data.InitDb(db)
-	defer data.CloseDb()
+	var sqlDao data.Dao = data.NewSqlDao("sqlite_clf_analyzer.db")
+	sqlDao.Init()
+	defer sqlDao.Close()
 
 	var cacheRefreshChan = make(chan int) // data.ticker -> SQL select -> scoreChannels.Broadcast()
 	var inputLineChan = make(chan string) // Channel used to make the input source generic
 	defer close(inputLineChan)
 	defer close(cacheRefreshChan)
 
-	startGoroutines(&inputLineChan, &cacheRefreshChan)
+	startGoroutines(&sqlDao, &inputLineChan, &cacheRefreshChan)
 	http.StartHttp(*Port)
 }

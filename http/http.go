@@ -20,20 +20,20 @@ type Ack struct {
 
 type AlertEntry struct {
 	AlertTime time.Time
-	Charge    uint64
-	Limit     uint64
+	Charge    int
+	Limit     int
 }
 
 func getAlertEntriesSlice(alerts []data.Alert) []AlertEntry {
 	var alertEntries []AlertEntry
 	for _, alert := range alerts {
-		var charge uint64
+		var charge int
 		if alert.Overcharged {
-			charge = core.AlertShreshold + 1
+			charge = core.AlertHitsThreshold + 1
 		} else {
 			charge = 0
 		}
-		alertEntry := AlertEntry{AlertTime: alert.CreatedAt, Charge: charge, Limit: core.AlertShreshold}
+		alertEntry := AlertEntry{AlertTime: alert.CreatedAt, Charge: charge, Limit: core.AlertHitsThreshold}
 		alertEntries = append(alertEntries, alertEntry)
 	}
 	return alertEntries

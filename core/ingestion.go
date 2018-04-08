@@ -10,10 +10,12 @@ import (
 	"time"
 )
 
-const AlertShreshold = 10
-var ChargeIn2Minutes uint64 = 0
+var AlertHitsThreshold = 10
+var ActualHitCount = 0
+const twoMinutesAgo = -2 * time.Minute
 
-func StartIngestion(inputChannel *chan string) {
+// Goroutine with the parsing and ingestion loop
+func IngestionLoop(dao *data.Dao, inputChannel *chan string) {
 	for line := range *inputChannel {
 		_, log, err := logparser.GuessParser(line)
 		if err != nil {
@@ -22,21 +24,34 @@ func StartIngestion(inputChannel *chan string) {
 		}
 
 		section := data.Log{Log: log, Section: getSection(log.RequestURI)}
-		data.Save(&section)
+		(*dao).Save(&section)
 	}
 }
 
-func UpdateAlert() {
-	for {
-		var countSections = data.CountSectionsIn2Minutes()
+// Checks when it should generate a new Alert event or not
+// return 1  for overcharged event
+// return 0  for still the same state as before
+// return -1 for back to normal traffic event
+func shouldAlert(actualHitCount int, newHitCount int, hitsThreshold int) int {
+	if actualHitCount <= hitsThreshold && newHitCount > hitsThreshold {
+		return 1
+	} else if actualHitCount > hitsThreshold && newHitCount <= hitsThreshold {
+		return -1
+	} else {
+		return 0
+	}
+}
 
-		if ChargeIn2Minutes <= AlertShreshold && countSections > AlertShreshold {
-			data.Save(&data.Alert{Overcharged: true})
-		} else if ChargeIn2Minutes > AlertShreshold && countSections <= AlertShreshold {
-			data.Save(&data.Alert{Overcharged: false})
+// Goroutine that updates alerts list
+func UpdateAlertLoop(dao *data.Dao){
+	for {
+		var newHitsCount = (*dao).CountSectionsInDuration(twoMinutesAgo)
+		switch shouldAlert(ActualHitCount, newHitsCount, AlertHitsThreshold) {
+		case  1: (*dao).Save(&data.Alert{Overcharged: true})
+		case -1: (*dao).Save(&data.Alert{Overcharged: false})
 		}
 
-		ChargeIn2Minutes = countSections
+		ActualHitCount = newHitsCount
 		<-time.After(time.Second) // Deliberated time of 1 second :D
 	}
 }
