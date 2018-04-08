@@ -6,6 +6,7 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	logparser "github.com/Songmu/axslogparser"
+	"fmt"
 )
 
 const MAX_SCORES = 10
@@ -71,7 +72,9 @@ func CloseDb() {
 
 func StartScoreLoop(scoreChannel *chan int) {
 	for {
-		Score = GetSectionsScore(MAX_SCORES)
+		if ScoreChannels.Count() > 0 {
+			Score = GetSectionsScore(MAX_SCORES)
+		}
 		<-ScoreChannels.C // Global ScoreTicker triggered every 10s
 		*scoreChannel <- SCORE // Trigger endpoint to write the new Score to the client
 	}
@@ -79,7 +82,9 @@ func StartScoreLoop(scoreChannel *chan int) {
 
 func StartAlertLoop(alertChannel *chan int) {
 	for {
-		Alerts = GetAlerts(MAX_ALERTS)
+		if AlertChannels.Count() > 0 {
+			Alerts = GetAlerts(MAX_ALERTS)
+		}
 		<-AlertChannels.C // Global AlertTicker triggered every 10s
 		*alertChannel <- ALERT // Trigger endpoint to write the new Alert to the client
 	}
@@ -87,7 +92,9 @@ func StartAlertLoop(alertChannel *chan int) {
 
 func StartHitsLoop(hitsChannel *chan int) {
 	for {
-		Hits = GetAllHitsGroupedBy10Seconds()
+		if HitsChannels.Count() > 0 {
+			Hits = GetAllHitsGroupedBy10Seconds()
+		}
 		<-HitsChannels.C        // Global HistsTicker triggered every second
 		*hitsChannel <- HIT   // Trigger endpoint to write the new Alert to the client
 	}
@@ -110,13 +117,13 @@ func GetAllHitsGroupedBy10Seconds() [120]uint64 {
 		CreatedAt time.Time
 	}
 	now := time.Now()
-	last10Minutes := now.Add(-20 * time.Minute) // 20 minutes before
-	db.Raw("SELECT logs.created_at FROM logs WHERE logs.created_at > ?", last10Minutes).Scan(&hitEntries)
+	last20Minutes := now.Add(-20 * time.Minute) // 20 minutes before
+	db.Raw("SELECT logs.created_at FROM logs WHERE logs.created_at > ?", last20Minutes).Scan(&hitEntries)
 
 	var ret [120]uint64
 	var j, i int64
 	for i = 10; i <= 1200; i += 10 {
-		for ;int64(len(hitEntries)) > j && hitEntries[j].CreatedAt.Unix() < last10Minutes.Unix() + i; j++ {
+		for ;int64(len(hitEntries)) > j && hitEntries[j].CreatedAt.Unix() < last20Minutes.Unix() + i; j++ {
 			ret[i/10-1]++
 		}
 	}
