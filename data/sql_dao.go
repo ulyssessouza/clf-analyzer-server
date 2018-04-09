@@ -4,6 +4,7 @@ import (
 	"time"
 	"github.com/jinzhu/gorm"
 	"sync"
+	"fmt"
 )
 
 // Type for the Sql data access object
@@ -49,9 +50,9 @@ func (s *SqlDao) GetSectionsScore(limit int) []SectionScoreEntry {
 	s.Raw("SELECT COUNT(logs.id) as hits, logs.section FROM logs GROUP BY logs.section ORDER BY COUNT(logs.id) DESC LIMIT ?", limit).Scan(&sections)
 	s.RUnlock()
 
-	for _, section := range sections {
-		section.Success = s.GetSuccessesBySection(section.Section)
-		section.Fail = s.GetFailsBySection(section.Section)
+	for i, _ := range sections {
+		sections[i].Success = s.GetSuccessesBySection(sections[i].Section)
+		sections[i].Fail = s.GetFailsBySection(sections[i].Section)
 	}
 	return sections
 }
