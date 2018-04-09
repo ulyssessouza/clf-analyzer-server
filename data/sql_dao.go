@@ -3,9 +3,11 @@ package data
 import (
 	"time"
 	"github.com/jinzhu/gorm"
+	"sync"
 )
 
 type SqlDao struct {
+	sync.RWMutex
 	*gorm.DB
 }
 
@@ -38,13 +40,17 @@ func (s *SqlDao) Close() {
 
 func (s *SqlDao) GetSectionsScore(limit int) []SectionScoreEntry {
 	var sections []SectionScoreEntry
+	s.RLock()
 	s.Raw("SELECT COUNT(logs.id) as hits, logs.section FROM logs GROUP BY logs.section ORDER BY COUNT(logs.id) DESC LIMIT ?", limit).Scan(&sections)
+	s.RUnlock()
 	return sections
 }
 
 func (s *SqlDao) GetAlerts(limit int) []Alert {
 	var alerts []Alert
+	s.RLock()
 	s.Raw("SELECT * FROM alerts ORDER BY alerts.created_at DESC LIMIT ?", limit).Scan(&alerts)
+	s.RUnlock()
 	return alerts
 }
 
@@ -56,7 +62,9 @@ func (s *SqlDao) GetAllHitsGroupedBy10Seconds() [120]uint64 {
 	}
 	now := time.Now()
 	last20Minutes := now.Add(-20 * time.Minute) // 20 minutes of events
+	s.RLock()
 	s.Raw("SELECT logs.created_at FROM logs WHERE logs.created_at > ?", last20Minutes).Scan(&hitEntries)
+	s.RUnlock()
 
 	var ret [120]uint64
 	var j, i int64
@@ -74,10 +82,14 @@ func (s *SqlDao) CountLogsInDuration(d time.Duration) int {
 		N int
 	}
 	last2Minutes := time.Now().Add(d) // 2 minutes before
+	s.RLock()
 	s.Raw("SELECT COUNT(*) as n FROM logs WHERE logs.created_at > ?", last2Minutes).Scan(&count)
+	s.RUnlock()
 	return count.N
 }
 
 func (s *SqlDao) Save(entry interface{}) {
+	s.Lock()
+	defer s.Unlock()
 	s.DB.Save(entry)
 }
