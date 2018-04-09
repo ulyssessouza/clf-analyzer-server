@@ -21,7 +21,7 @@ var Hits [120]uint64 // Limiting to 120 point in the graph
 
 
 // Real singletons (App members)
-var ScoreChannels = NewSynchBroadcastArray(1)
+var ScoreChannels = NewSynchBroadcastArray(10)
 var AlertChannels = NewSynchBroadcastArray(1)
 var HitsChannels = NewSynchBroadcastArray(1)
 
@@ -44,6 +44,7 @@ type SectionScoreEntry struct {
 	Section string
 }
 
+// Goroutine that updates the score list
 func StartScoreLoop(dao *Dao, scoreChannel *chan int) {
 	for {
 		if ScoreChannels.Count() > 0 {
@@ -54,6 +55,7 @@ func StartScoreLoop(dao *Dao, scoreChannel *chan int) {
 	}
 }
 
+// Goroutine that updates the alert list
 func StartAlertLoop(dao *Dao, alertChannel *chan int) {
 	for {
 		if AlertChannels.Count() > 0 {
@@ -64,6 +66,7 @@ func StartAlertLoop(dao *Dao, alertChannel *chan int) {
 	}
 }
 
+// Goroutine that updates the hits list
 func StartHitsLoop(dao *Dao, hitsChannel *chan int) {
 	for {
 		if HitsChannels.Count() > 0 {

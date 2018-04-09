@@ -7,7 +7,6 @@ import (
 	"github.com/ulyssessouza/clf-analyzer-server/data"
 	"github.com/ulyssessouza/clf-analyzer-server/core"
 	"github.com/labstack/echo"
-	"github.com/swaggo/echo-swagger"
 	"github.com/labstack/echo/middleware"
 )
 
@@ -24,6 +23,7 @@ type AlertEntry struct {
 	Limit     int
 }
 
+// This function transforms []data.Alert into []AlertEntry
 func getAlertEntriesSlice(alerts []data.Alert) []AlertEntry {
 	var alertEntries []AlertEntry
 	for _, alert := range alerts {
@@ -39,6 +39,7 @@ func getAlertEntriesSlice(alerts []data.Alert) []AlertEntry {
 	return alertEntries
 }
 
+// Waits for the ticks to broadcast the different data
 func StartListenTicks(c *chan int) {
 	for {
 		signal := <-*c
@@ -60,7 +61,6 @@ func StartHttp(port int) {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	gV1 := e.Group(apiVersion1)
-	gV1.GET("/swagger/*", echoSwagger.WrapHandler)
 	gV1.GET("/score", SectionsScoreHandler)
 	gV1.GET("/alert", AlertsHandler)
 	gV1.GET("/hits", HitsHandler)

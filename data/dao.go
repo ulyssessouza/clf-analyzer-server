@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+// Interfaces for the data access
 type SaveAndCountInDuration interface {
 	Save(interface{})
 	CountLogsInDuration(d time.Duration) int

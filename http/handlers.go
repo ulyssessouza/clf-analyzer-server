@@ -9,6 +9,7 @@ import (
 
 var upgrader = websocket.Upgrader{}
 
+// Websocket endpoint for the most visited sections
 func SectionsScoreHandler(c echo.Context) error {
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
@@ -34,6 +35,7 @@ func SectionsScoreHandler(c echo.Context) error {
 	return nil
 }
 
+// Websocket endpoint for the alerts
 func AlertsHandler(c echo.Context) error {
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
@@ -60,6 +62,7 @@ func AlertsHandler(c echo.Context) error {
 	return nil
 }
 
+// Websocket endpoint for the hits graph
 func HitsHandler(c echo.Context) error {
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
@@ -85,6 +88,7 @@ func HitsHandler(c echo.Context) error {
 	return nil
 }
 
+// Acknowledgment check function
 func checkAck(ws *websocket.Conn) bool {
 	var ack Ack
 	err := ws.ReadJSON(&ack)

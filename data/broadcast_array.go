@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// This type is an array of channels registered by every live connection waiting for updated data to be broadcasted
 type SynchBroadcastArray struct {
 	sync.Mutex
 	*time.Ticker
