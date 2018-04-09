@@ -8,10 +8,7 @@ import (
 	"github.com/ulyssessouza/clf-analyzer-server/http"
 )
 
-var Port = flag.Int("port", 8000, "port to listen on")
-var tailFlag = flag.String("tail", "stdin", "file to tail")
-
-func startGoroutines(dao *data.Dao, inputLineChan *chan string, cacheRefreshChan *chan int) {
+func startGoroutines(dao *data.Dao, tailFlag *string, inputLineChan *chan string, cacheRefreshChan *chan int) {
 	// Choose input mode
 	if tailFlag != nil && *tailFlag != "" && *tailFlag != "stdin" {
 		go inputFromTail(inputLineChan, *tailFlag)
@@ -32,7 +29,12 @@ func startGoroutines(dao *data.Dao, inputLineChan *chan string, cacheRefreshChan
 }
 
 func main() {
+	var port = flag.Int("port", 8000, "port to listen on")
+	var tailFlag = flag.String("tail", "stdin", "file to tail")
+	var alertHitsThreshold = flag.Int("alertThreshold", 10, "threshold of log entries in 2 minutes to consider a normal traffic.")
 	flag.Parse()
+
+	core.AlertHitsThreshold = *alertHitsThreshold
 
 	var sqlDao data.Dao = data.NewSqlDao("sqlite_clf_analyzer.db")
 	sqlDao.Init()
@@ -43,6 +45,6 @@ func main() {
 	defer close(inputLineChan)
 	defer close(cacheRefreshChan)
 
-	startGoroutines(&sqlDao, &inputLineChan, &cacheRefreshChan)
-	http.StartHttp(*Port)
+	startGoroutines(&sqlDao, tailFlag, &inputLineChan, &cacheRefreshChan)
+	http.StartHttp(*port)
 }
