@@ -37,7 +37,6 @@ test: build
 	$(GOTEST) -v github.com/ulyssessouza/clf-analyzer-server
 	$(GOTEST) -v github.com/ulyssessouza/clf-analyzer-server/core
 	$(GOTEST) -v github.com/ulyssessouza/clf-analyzer-server/data
-	$(GOTEST) -v github.com/ulyssessouza/clf-analyzer-server/docs
 	$(GOTEST) -v github.com/ulyssessouza/clf-analyzer-server/http
 
 clean:
