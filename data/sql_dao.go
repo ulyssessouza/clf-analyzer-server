@@ -1,10 +1,9 @@
 package data
 
 import (
+	"sync"
 	"time"
 	"github.com/jinzhu/gorm"
-	"sync"
-	"fmt"
 )
 
 // Type for the Sql data access object
