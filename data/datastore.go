@@ -6,6 +6,7 @@ import (
 	logparser "github.com/Songmu/axslogparser"
 )
 
+// UI box size
 const MAX_SCORES = 10
 const MAX_ALERTS = MAX_SCORES
 
