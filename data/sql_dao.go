@@ -69,7 +69,7 @@ func (s *SqlDao) GetAllHitsGroupedBy10Seconds() [120]uint64 {
 	return ret
 }
 
-func (s *SqlDao) CountSectionsInDuration(d time.Duration) int {
+func (s *SqlDao) CountLogsInDuration(d time.Duration) int {
 	var count struct {
 		N int
 	}

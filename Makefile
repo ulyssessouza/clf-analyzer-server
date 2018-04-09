@@ -22,7 +22,7 @@ BINARY_TARGET_PATH=$(BUILD_TARGET_PATH)/$(BINARY_NAME)
 BINARY_TARGET_UNIX_PATH=$(BUILD_TARGET_PATH)/$(BINARY_UNIX)
 BINARY_TARGET_WINDOWS_PATH=$(BUILD_TARGET_PATH)/$(BINARY_WINDOWS)
 
-ensure-progs: ensure-swag ensure-dep ensure-dlv ensure-gin
+ensure-progs: ensure-dep ensure-dlv ensure-gin
 	@echo ensure-progs
 
 all: test rundev
@@ -30,11 +30,15 @@ all: test rundev
 ensure:
 	dep ensure
 
-build: ensure-progs ensure clean goformat swagger
+build: ensure-progs ensure clean goformat
 	$(GOBUILD) $(GOBUILD_ARGS)
 
 test: build
-	$(GOTEST) -v $(go list ./... | grep -v /vendor/)
+	$(GOTEST) -v github.com/ulyssessouza/clf-analyzer-server
+	$(GOTEST) -v github.com/ulyssessouza/clf-analyzer-server/core
+	$(GOTEST) -v github.com/ulyssessouza/clf-analyzer-server/data
+	$(GOTEST) -v github.com/ulyssessouza/clf-analyzer-server/docs
+	$(GOTEST) -v github.com/ulyssessouza/clf-analyzer-server/http
 
 clean:
 	$(GOCLEAN)
@@ -68,15 +72,6 @@ check-env-%:
 
 goformat:
 	go fmt .
-
-swagger:
-	swag init
-
-ensure-swag:
-ifeq (, $(shell which swag))
-	go get -u github.com/swaggo/swag/cmd/swag
-endif
-	@echo ensure swag
 
 ensure-dep:
 ifeq (, $(shell which dep))

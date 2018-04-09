@@ -2,6 +2,7 @@ package core
 
 import (
 	"os"
+	"time"
 	"testing"
 
 	"github.com/ulyssessouza/clf-analyzer-server/data"
@@ -18,7 +19,7 @@ var sqlDao data.Dao
 func TestShouldAlert(t *testing.T) {
 	const alertHitsThreshold = 5
 	actualHitCount := alertHitsThreshold
-	newHitCount := actualHitCount // Simulate new value for count adding one entry
+	newHitCount := actualHitCount // Simulate new value for logCount adding one entry
 
 	assert.Equal(t, 0, shouldAlert(0, newHitCount, alertHitsThreshold))
 
@@ -28,6 +29,53 @@ func TestShouldAlert(t *testing.T) {
 
 	actualHitCount = newHitCount
 	assert.Equal(t, -1, shouldAlert(actualHitCount, alertHitsThreshold - 1, alertHitsThreshold))
+}
+
+type testSaverDao struct {
+	logCount int
+	alertCount int
+}
+
+func (t *testSaverDao) Save(i interface{}) {
+	switch i.(type) {
+	case *data.Alert: t.alertCount++
+	case *data.Log: t.logCount++
+	}
+}
+
+func (t *testSaverDao) CountLogsInDuration(_ time.Duration) int {
+	return t.logCount
+}
+
+func TestFullAlertLogicWithMock(t *testing.T) {
+	const inputLine = "127.0.0.1 - ulysses [10/Oct/2000:13:55:36 -0700] \"GET /apache_pb.gif HTTP/1.0\" 200 2326"
+
+	inputChannel := make(chan string)
+
+	var testConcreteMock = testSaverDao{}
+	var saverMock data.SaveAndCountInDuration = &testConcreteMock
+
+	go IngestionLoop(&saverMock, &inputChannel)
+	go UpdateAlertLoop(&saverMock)
+
+	assert.Equal(t, 0, testConcreteMock.logCount)
+
+	inputChannel <- inputLine
+	<-time.After(time.Second)                     // Just to make sure
+	assert.Equal(t, 1, testConcreteMock.logCount) // Test if ingestion was OK
+
+	for i := 0; i < AlertHitsThreshold; i++ {
+		inputChannel <- inputLine
+	}
+	<-time.After(time.Second)
+	assert.Equal(t, AlertHitsThreshold+1, testConcreteMock.logCount) // Test if ingestion was OK
+
+	<-time.After(time.Second)
+	assert.Equal(t, 1, testConcreteMock.alertCount) // Test if ingestion was OK
+
+	testConcreteMock.logCount = AlertHitsThreshold
+	<-time.After(time.Second)
+	assert.Equal(t, 2, testConcreteMock.alertCount) // Test if ingestion was OK
 }
 
 func TestGetFirstSections(t *testing.T) {

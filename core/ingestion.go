@@ -1,13 +1,13 @@
 package core
 
 import (
+	"strings"
 	"fmt"
+	"time"
 
 	logparser "github.com/Songmu/axslogparser"
 
 	"github.com/ulyssessouza/clf-analyzer-server/data"
-	"strings"
-	"time"
 )
 
 var AlertHitsThreshold = 10
@@ -15,7 +15,7 @@ var ActualHitCount = 0
 const twoMinutesAgo = -2 * time.Minute
 
 // Goroutine with the parsing and ingestion loop
-func IngestionLoop(dao *data.Dao, inputChannel *chan string) {
+func IngestionLoop(saver *data.SaveAndCountInDuration, inputChannel *chan string) {
 	for line := range *inputChannel {
 		_, log, err := logparser.GuessParser(line)
 		if err != nil {
@@ -24,7 +24,7 @@ func IngestionLoop(dao *data.Dao, inputChannel *chan string) {
 		}
 
 		section := data.Log{Log: log, Section: getSection(log.RequestURI)}
-		(*dao).Save(&section)
+		(*saver).Save(&section)
 	}
 }
 
@@ -43,16 +43,16 @@ func shouldAlert(actualHitCount int, newHitCount int, hitsThreshold int) int {
 }
 
 // Goroutine that updates alerts list
-func UpdateAlertLoop(dao *data.Dao){
+func UpdateAlertLoop(dao *data.SaveAndCountInDuration){
 	for {
-		var newHitsCount = (*dao).CountSectionsInDuration(twoMinutesAgo)
+		var newHitsCount = (*dao).CountLogsInDuration(twoMinutesAgo)
 		switch shouldAlert(ActualHitCount, newHitsCount, AlertHitsThreshold) {
 		case  1: (*dao).Save(&data.Alert{Overcharged: true})
 		case -1: (*dao).Save(&data.Alert{Overcharged: false})
 		}
 
 		ActualHitCount = newHitsCount
-		<-time.After(time.Second) // Deliberated time of 1 second :D
+		<-time.After(time.Second / 2) // Deliberated time of 1/2 of second :D
 	}
 }
 
