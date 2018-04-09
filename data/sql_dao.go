@@ -94,6 +94,7 @@ func (s *SqlDao) CountLogsInDuration(d time.Duration) int {
 	return count.N
 }
 
+// General save method
 func (s *SqlDao) Save(entry interface{}) {
 	s.Lock()
 	defer s.Unlock()
