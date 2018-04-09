@@ -48,6 +48,11 @@ func (s *SqlDao) GetSectionsScore(limit int) []SectionScoreEntry {
 	s.RLock()
 	s.Raw("SELECT COUNT(logs.id) as hits, logs.section FROM logs GROUP BY logs.section ORDER BY COUNT(logs.id) DESC LIMIT ?", limit).Scan(&sections)
 	s.RUnlock()
+
+	for _, section := range sections {
+		section.Success = s.GetSuccessesBySection(section.Section)
+		section.Fail = s.GetFailsBySection(section.Section)
+	}
 	return sections
 }
 
@@ -90,6 +95,28 @@ func (s *SqlDao) CountLogsInDuration(d time.Duration) int {
 	lastRangeOfTime := time.Now().Add(d)
 	s.RLock()
 	s.Raw("SELECT COUNT(*) as n FROM logs WHERE logs.created_at > ?", lastRangeOfTime).Scan(&count)
+	s.RUnlock()
+	return count.N
+}
+
+// Gets amount of successes for a certain section
+func (s *SqlDao) GetSuccessesBySection(section string) int {
+	var count struct {
+		N int
+	}
+	s.RLock()
+	s.Raw("SELECT COUNT(*) as n FROM logs WHERE logs.section = ? AND logs.status < 400", section).Scan(&count)
+	s.RUnlock()
+	return count.N
+}
+
+// Gets amount of failures for a certain section
+func (s *SqlDao) GetFailsBySection(section string) int {
+	var count struct {
+		N int
+	}
+	s.RLock()
+	s.Raw("SELECT COUNT(*) as n FROM logs WHERE logs.section = ? AND logs.status >= 400", section).Scan(&count)
 	s.RUnlock()
 	return count.N
 }

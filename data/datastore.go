@@ -43,6 +43,8 @@ type Alert struct {
 type SectionScoreEntry struct {
 	Hits uint64
 	Section string
+	Success int
+	Fail int
 }
 
 // Goroutine that updates the score list

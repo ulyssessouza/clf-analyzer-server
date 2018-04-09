@@ -21,4 +21,7 @@ type Dao interface {
 	GetSectionsScore(limit int) []SectionScoreEntry
 	GetAlerts(limit int) []Alert
 	GetAllHitsGroupedBy10Seconds() [120]uint64
+
+	GetSuccessesBySection(section string) int
+	GetFailsBySection(section string) int
 }
