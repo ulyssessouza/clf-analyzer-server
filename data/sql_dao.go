@@ -6,11 +6,13 @@ import (
 	"sync"
 )
 
+// Type for the Sql data access object
 type SqlDao struct {
 	sync.RWMutex
 	*gorm.DB
 }
 
+// Creates a new instance of SqlDao
 func NewSqlDao(dbFileName string) *SqlDao {
 	sqlDao := &SqlDao{}
 	sqlDao.Open(dbFileName)
@@ -23,6 +25,7 @@ func (s *SqlDao) Init() {
 	s.AutoMigrate(&Alert{})
 }
 
+// Opens DB connection
 func (s *SqlDao) Open(dbFilename string) {
 	dbLocal, err := gorm.Open("sqlite3", dbFilename)
 	if err != nil {
@@ -32,12 +35,14 @@ func (s *SqlDao) Open(dbFilename string) {
 	s.DB = dbLocal
 }
 
+// Closes DB connection
 func (s *SqlDao) Close() {
 	if s.DB != nil {
 		s.DB.Close()
 	}
 }
 
+// Gets a certain amount of sections ordered by the most visited
 func (s *SqlDao) GetSectionsScore(limit int) []SectionScoreEntry {
 	var sections []SectionScoreEntry
 	s.RLock()
@@ -77,13 +82,14 @@ func (s *SqlDao) GetAllHitsGroupedBy10Seconds() [120]uint64 {
 	return ret
 }
 
+// Counts logs from a certain time until now
 func (s *SqlDao) CountLogsInDuration(d time.Duration) int {
 	var count struct {
 		N int
 	}
-	last2Minutes := time.Now().Add(d) // 2 minutes before
+	lastRangeOfTime := time.Now().Add(d)
 	s.RLock()
-	s.Raw("SELECT COUNT(*) as n FROM logs WHERE logs.created_at > ?", last2Minutes).Scan(&count)
+	s.Raw("SELECT COUNT(*) as n FROM logs WHERE logs.created_at > ?", lastRangeOfTime).Scan(&count)
 	s.RUnlock()
 	return count.N
 }
